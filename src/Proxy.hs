@@ -4,22 +4,56 @@ module Proxy (
     someFunc,
 ) where
 
-import qualified Data.ByteString.Char8 as B
-import Data.Maybe (fromMaybe)
-import Network.Simple.TCP
+import Control.Concurrent (forkFinally)
+import qualified Control.Exception as E
+import Network.Socket
+import Network.Socket.ByteString (recv, send)
 
-con :: B.ByteString -> IO (Maybe B.ByteString)
-con msg = connect "localhost" "3000" $ \(connectionSocket, remoteAddr) -> do
-    send connectionSocket msg
-    recv connectionSocket 1024
-
-handle :: IO ()
-handle = serve (Host "127.0.0.1") "8000" $ \(connectionSocket, remoteAddr) -> do
-    msg <- recv connectionSocket 1024
-    print $ "Recieved: " ++ show (fromMaybe "" msg)
-    output <- con $ fromMaybe "" msg
-    print $ "Recieved: " ++ show (fromMaybe "" output)
-    send connectionSocket $ fromMaybe "" output
+handler :: Socket -> IO ()
+handler sock = do
+    req <- recv sock 1024
+    msg <- handle' req
+    _ <- send sock msg
+    putStr "Request Handled\n"
+  where
+    handle' req = runTCPClient "127.0.0.1" "3000" $ \s -> do
+        _ <- send s req
+        recv s 1024
 
 someFunc :: IO ()
-someFunc = handle
+someFunc = runTCPServer Nothing "8000" handler
+
+runTCPClient :: HostName -> ServiceName -> (Socket -> IO a) -> IO a
+runTCPClient host port client = withSocketsDo $ do
+    addr <- resolve
+    E.bracket (open addr) close client
+  where
+    resolve = do
+        let hints = defaultHints{addrSocketType = Stream}
+        head <$> getAddrInfo (Just hints) (Just host) (Just port)
+    open addr = E.bracketOnError (openSocket addr) close $ \sock -> do
+        connect sock $ addrAddress addr
+        return sock
+
+runTCPServer :: Maybe HostName -> ServiceName -> (Socket -> IO a) -> IO a
+runTCPServer mhost port server = withSocketsDo $ do
+    addr <- resolve
+    E.bracket (open addr) close loop
+  where
+    resolve = do
+        let hints =
+                defaultHints
+                    { addrFlags = [AI_PASSIVE]
+                    , addrSocketType = Stream
+                    }
+        head <$> getAddrInfo (Just hints) mhost (Just port)
+    open addr = E.bracketOnError (openSocket addr) close $ \sock -> do
+        setSocketOption sock ReuseAddr 1
+        withFdSocket sock setCloseOnExecIfNeeded
+        bind sock $ addrAddress addr
+        listen sock 1024
+        return sock
+    loop sock = do
+        (conn, _peer) <- accept sock
+        _ <- forkFinally (server conn) (const $ gracefulClose conn 5000)
+        loop sock
