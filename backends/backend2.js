@@ -11,7 +11,8 @@ http
     // 2. Write the announced text to the body of the page
     response.write("Hello, World!\n");
 
+    console.log("Request Handled");
     // 3. Tell the server that all of the response headers and body have been sent
     response.end();
   })
-  .listen(3000); // 4. Tells the server what port to be on
+  .listen(3001); // 4. Tells the server what port to be on

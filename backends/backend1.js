@@ -11,6 +11,7 @@ http
     // 2. Write the announced text to the body of the page
     response.write("Hello, World!\n");
 
+    console.log("Request Handled");
     // 3. Tell the server that all of the response headers and body have been sent
     response.end();
   })

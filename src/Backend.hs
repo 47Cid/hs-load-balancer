@@ -1,8 +1,21 @@
 module Backend where
 
-data Backend = Backend {url :: String, alive :: Bool}
+data Backend = Backend {ip :: String, port :: String, alive :: Bool}
 
-data ServerPool = ServerPool {server_pool :: [Backend], current_server :: Int}
+data ServerPool = ServerPool {serverPool :: [Backend], currentServer :: Int}
 
-x :: Backend
-x = Backend{url = "hey", alive = False}
+test_pool :: ServerPool
+test_pool =
+    ServerPool
+        { serverPool =
+            [ Backend{ip = "127.0.0.1", port = "3000", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3001", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3002", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3003", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3004", alive = True}
+            ]
+        , currentServer = 0
+        }
+
+getBackEnd :: ServerPool -> Int
+getBackEnd pool = currentServer pool
