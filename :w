@@ -1,0 +1,37 @@
+
+{-# LANGUAGE OverloadedStrings #-}
+module LB.Config where
+
+data Backend = Backend {ip :: !String, port :: !String, alive :: !Bool}
+    deriving (Show, Eq)
+
+data ServerPool = ServerPool {serverPool :: ![Backend], currentServer :: !Int}
+    deriving (Show, Eq)
+
+
+logFile :: ByteString
+logFile = "logs/logs.txt"
+
+test_pool :: ServerPool
+test_pool =
+    ServerPool
+        { serverPool =
+            [ Backend{ip = "127.0.0.1", port = "3000", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3001", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3002", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3003", alive = True}
+            , Backend{ip = "127.0.0.1", port = "3004", alive = True}
+            ]
+        , currentServer = 0
+        }
+
+-- Gets the next live backend
+getBackEnd :: ServerPool -> Int -> Maybe Int
+getBackEnd pool acc
+    | alive $ serverPool pool !! currentServer pool = Just $ currentServer pool
+    | acc == length (serverPool pool) = Nothing
+    | otherwise = getBackEnd incServer (acc + 1)
+  where
+    serverIndex = currentServer pool
+    poolSize = length $ serverPool pool
+    incServer = pool{currentServer = (serverIndex + 1) `mod` poolSize}

@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Proxy
+import LB.Proxy(run)
 
 main :: IO ()
-main = someFunc
+main = run

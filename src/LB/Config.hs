@@ -1,11 +1,16 @@
-module Backend where
+module LB.Config where
 
-data Backend = Backend {ip :: String, port :: String, alive :: Bool}
+data Backend = Backend {ip :: !String, port :: !String, alive :: !Bool}
+    deriving (Show, Eq)
 
-data ServerPool = ServerPool {serverPool :: [Backend], currentServer :: Int}
+data ServerPool = ServerPool {serverPool :: ![Backend], currentServer :: !Int}
+    deriving (Show, Eq)
 
-test_pool :: ServerPool
-test_pool =
+logFile :: String
+logFile = "logs/logs.txt"
+
+poolConfig :: ServerPool
+poolConfig =
     ServerPool
         { serverPool =
             [ Backend{ip = "127.0.0.1", port = "3000", alive = True}
@@ -16,6 +21,3 @@ test_pool =
             ]
         , currentServer = 0
         }
-
-getBackEnd :: ServerPool -> Int
-getBackEnd pool = currentServer pool

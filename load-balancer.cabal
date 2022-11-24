@@ -25,9 +25,10 @@ source-repository head
 
 library
   exposed-modules:
-      Backend
-      PassiveCheck
-      Proxy
+      LB.Config
+      LB.HealthCheck
+      LB.Logger
+      LB.Proxy
   other-modules:
       Paths_load_balancer
   hs-source-dirs:
@@ -36,7 +37,9 @@ library
   build-depends:
       base >=4.7 && <5
     , bytestring
+    , mtl
     , network
+    , process
   default-language: Haskell2010
 
 executable load-balancer-exe
@@ -50,7 +53,9 @@ executable load-balancer-exe
       base >=4.7 && <5
     , bytestring
     , load-balancer
+    , mtl
     , network
+    , process
   default-language: Haskell2010
 
 test-suite load-balancer-test
@@ -65,5 +70,7 @@ test-suite load-balancer-test
       base >=4.7 && <5
     , bytestring
     , load-balancer
+    , mtl
     , network
+    , process
   default-language: Haskell2010
